@@ -41,7 +41,10 @@ plot(raw_data.LiDAR_x, raw_data.LiDAR_y, 'k-', 'LineWidth', 2.5);
 
 R = eul2rotm([anchorlocations.psi, anchorlocations.theta, anchorlocations.phi], 'ZYX');
 
-% Adding arrows for anchor direction
+
+%4,1,5,2,7
+color_order = ["#EDB120", "#0072BD", "#7E2F8E", "#A2142F", "#77AC30"];
+
 for i = 1:length(anchorlocations.x)
     % Extract the rotation matrix for the current point
     R_current = R(:,:,i);
@@ -56,8 +59,12 @@ for i = 1:length(anchorlocations.x)
     local_x = local_v(1);
     local_y = local_v(2);
     
-    % Plot the arrow
-    quiver(anchorlocations.x(i), anchorlocations.y(i), local_x, local_y, 'LineWidth', 1, 'MaxHeadSize', 1);
+    % Choose the color for the current arrow
+    color_index = mod(i, length(color_order)) + 1; % Cycling through the color order
+    color = color_order(color_index);
+    
+    % Plot the arrow with the chosen color
+    quiver(anchorlocations.x(i), anchorlocations.y(i), local_x, local_y, 'LineWidth', 1, 'MaxHeadSize', 1, 'Color', color);
 end
 
 
