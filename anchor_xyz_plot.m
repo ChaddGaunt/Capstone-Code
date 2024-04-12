@@ -36,8 +36,9 @@ plot(anchor7_x, anchor7_y, 'o', 'MarkerSize', 4);
 
 plot(anchorlocations.x, anchorlocations.y, '>', 'MarkerSize', 10); % Plot with large triangles
 
-plot(raw_data.LiDAR_x, raw_data.LiDAR_y, 'k-', 'LineWidth', 2.5); 
+%plot(raw_data.LiDAR_x, raw_data.LiDAR_y, 'k-', 'LineWidth', 2.5); 
 
+plot(PF_Data.x, PF_Data.y, 'k-', 'LineWidth', 2.5); 
 
 R = eul2rotm([anchorlocations.psi, anchorlocations.theta, anchorlocations.phi], 'ZYX');
 
