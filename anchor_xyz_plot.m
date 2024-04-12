@@ -1,7 +1,7 @@
 hold on; 
 raw_data = readtable('Interpolated_data.xlsx');
 anchorlocations = readtable('UWB Device Locations AdNav.csv');
-PF_Data = readtable("PF_var_2.5_Associate_10.csv");
+PF_Data = readtable("PF_var_2.5_associate_10.csv");
 
 
 anchor1_indices = strcmp(raw_data.UWB_Anchor, '00280038:3136510B:34393732');
@@ -43,7 +43,8 @@ R = eul2rotm([anchorlocations.psi, anchorlocations.theta, anchorlocations.phi], 
 
 
 %4,1,5,2,7
-color_order = ["#EDB120", "#0072BD", "#7E2F8E", "#A2142F", "#77AC30"];
+% color_order = ["#EDB120", "#0072BD", "#7E2F8E", "#A2142F", "#77AC30"];
+color_order = ['r', 'g', 'b', 'm', 'y'];
 
 for i = 1:length(anchorlocations.x)
     % Extract the rotation matrix for the current point
@@ -65,6 +66,13 @@ for i = 1:length(anchorlocations.x)
     
     % Plot the arrow with the chosen color
     quiver(anchorlocations.x(i), anchorlocations.y(i), local_x, local_y, 'LineWidth', 1, 'MaxHeadSize', 1, 'Color', color);
+    ang = atan2(anchorlocations.y(i)-local_y,anchorlocations.x(i)-local_x);
+    fprintf(1,'%d: Angle %4.2f\n',i,ang*180/pi)
+    txt = sprintf("%d",i);
+    Veh = vehicle([anchorlocations.x(i), anchorlocations.y(i), ang]);
+    patch(Veh(1:3), Veh(4:6),  color,'FaceAlpha', 0.5);
+    text(anchorlocations.x(i)+0.4, anchorlocations.y(i),txt);
+
 end
 
 
