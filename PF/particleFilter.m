@@ -171,9 +171,26 @@ function [pf] = initParticleFilter
     fprintf(1,'Initialising robot pose %6.4f,%6.4f,%6.4f\n',robotPose.pose(1) ,robotPose.pose(2),robotPose.pose(3));
 
     pf.associationGate = 10;
-    pf.trackValidationCount =  8 ;
+    pf.trackValidationCount =  8;
     pf.trackDeletionCount =  -3;
     pf.MAXSAMPLES = 500;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+% UPDATE VARIABLE CONSTANTS HERE: 
+
+    pf.personRangeModel_variance = 0.75;
+    
+    pf.prediction_velocity_x = 0.05;
+    pf.prediction_velocity_xDot = 0.05;
+    pf.prediction_velocity_y = 0.05;
+    pf.prediction_velocity_yDot = 0.05;
+    
+    pf.resample_x = 0.0050;
+    pf.resample_xDot = 0.0050;
+    pf.resample_y = 0.0050;
+    pf.resample_yDot = 0.0050;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     
     fprintf(1,'Init params, association gate:%6.4f  track validation count:%6.4f  track deletion count:%6.4f\n',  pf.associationGate, pf.trackValidationCount, pf.trackDeletionCount);
 end
@@ -190,10 +207,10 @@ function [pf] = prediction (pf, deltaT)
     %         for(unsigned int j=0;j<filterSet_(i).sampleSet.size();j++)
         for j=1:size(pf.filter(i).sampleSet,2)
     %          filterSet_(i).sampleSet(j).pose(0) += filterSet_(i).sampleSet(j).pose(1)+gsl_ran_gaussian(rng_, 0.1))*deltaT;
-            pf.filter(i).sampleSet(j).pose(1) = pf.filter(i).sampleSet(j).pose(1)  +  ( (pf.filter(i).sampleSet(j).pose(2) + gsl_ran_gaussian(0.05)) *deltaT);         
-            pf.filter(i).sampleSet(j).pose(2) = pf.filter(i).sampleSet(j).pose(2)  + gsl_ran_gaussian(0.05);
-            pf.filter(i).sampleSet(j).pose(3) = pf.filter(i).sampleSet(j).pose(3)  +  ( (pf.filter(i).sampleSet(j).pose(4) + gsl_ran_gaussian(0.05)) *deltaT);          
-            pf.filter(i).sampleSet(j).pose(4) = pf.filter(i).sampleSet(j).pose(4)  + gsl_ran_gaussian(0.05);
+            pf.filter(i).sampleSet(j).pose(1) = pf.filter(i).sampleSet(j).pose(1)  +  ( (pf.filter(i).sampleSet(j).pose(2) + gsl_ran_gaussian(pf.prediction_velocity_x)) *deltaT);         
+            pf.filter(i).sampleSet(j).pose(2) = pf.filter(i).sampleSet(j).pose(2)  + gsl_ran_gaussian(pf.prediction_velocity_xDot);
+            pf.filter(i).sampleSet(j).pose(3) = pf.filter(i).sampleSet(j).pose(3)  +  ( (pf.filter(i).sampleSet(j).pose(4) + gsl_ran_gaussian(pf.prediction_velocity_y)) *deltaT);          
+            pf.filter(i).sampleSet(j).pose(4) = pf.filter(i).sampleSet(j).pose(4)  + gsl_ran_gaussian(pf.prediction_velocity_yDot);
         end
     end
 
@@ -460,10 +477,10 @@ function [pf] = resample_systematic(pf,i)
     pf.filter(i).sampleSet = resampledParticles;
     
     for k=1:N
-        pf.filter(i).sampleSet(k).pose(1) = pf.filter(i).sampleSet(k).pose(1) + gsl_ran_gaussian(0.0050);
-        pf.filter(i).sampleSet(k).pose(2) = pf.filter(i).sampleSet(k).pose(2) + gsl_ran_gaussian(0.0050);
-        pf.filter(i).sampleSet(k).pose(3) = pf.filter(i).sampleSet(k).pose(3) + gsl_ran_gaussian(0.0050);
-        pf.filter(i).sampleSet(k).pose(4) = pf.filter(i).sampleSet(k).pose(4) + gsl_ran_gaussian(0.0050);
+        pf.filter(i).sampleSet(k).pose(1) = pf.filter(i).sampleSet(k).pose(1) + gsl_ran_gaussian(pf.resample_x);
+        pf.filter(i).sampleSet(k).pose(2) = pf.filter(i).sampleSet(k).pose(2) + gsl_ran_gaussian(pf.resample_xDot);
+        pf.filter(i).sampleSet(k).pose(3) = pf.filter(i).sampleSet(k).pose(3) + gsl_ran_gaussian(pf.resample_y);
+        pf.filter(i).sampleSet(k).pose(4) = pf.filter(i).sampleSet(k).pose(4) + gsl_ran_gaussian(pf.resample_yDot);
     end
 
 end% end function 
@@ -565,7 +582,7 @@ end
 
 function [pf] = personRangeModel(pf,features)
 
-    variance= 2;
+    %variance= 2;
 
     %for all filters
     for i=1:size(pf.filter,2)
@@ -579,7 +596,7 @@ function [pf] = personRangeModel(pf,features)
                 dx = features(pf.filter(i).featureIndex).x - pf.filter(i).sampleSet(j).pose(1);
                 dy = features(pf.filter(i).featureIndex).y - pf.filter(i).sampleSet(j).pose(3);
                 z  = sqrt(dx*dx+dy*dy);
-                pf.filter(i).sampleSet(j).w = exp(-(z * z)/ (2 * variance * variance));
+                pf.filter(i).sampleSet(j).w = exp(-(z * z)/ (2 * pf.personRangeModel_variance * pf.personRangeModel_variance));
                 if (pf.filter(i).sampleSet(j).w > maxW)
                     maxW=pf.filter(i).sampleSet(j).w;
                 end
