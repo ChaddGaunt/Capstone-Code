@@ -1,7 +1,14 @@
-hold on; 
+hold on;
 raw_data = readtable('Interpolated_data.xlsx');
 anchorlocations = readtable('UWB Device Locations AdNav.csv');
-PF_Data = readtable("PF_var_2.5_associate_10.csv");
+PF_Data = readtable("PF_var_0.75.csv");
+
+PCdata = pcread('AdNav_Experiment3_PC_Level (No Floor).ply');
+
+% Extract X, Y, and Z coordinates
+X = PCdata.Location(:,1);
+Y = PCdata.Location(:,2);
+Z = PCdata.Location(:,3);
 
 
 anchor1_indices = strcmp(raw_data.UWB_Anchor, '00280038:3136510B:34393732');
@@ -33,43 +40,42 @@ anchor7_x = raw_data.UWB_x(anchor7_indices);
 anchor7_y = raw_data.UWB_y(anchor7_indices);
 plot(anchor7_x, anchor7_y, 'o', 'MarkerSize', 4);
 
+%plot(raw_data.LiDAR_x, raw_data.LiDAR_y, 'k-', 'LineWidth', 2.5);
 
-plot(anchorlocations.x, anchorlocations.y, '>', 'MarkerSize', 10); % Plot with large triangles
+plot(PF_Data.x, PF_Data.y, 'ko-', 'LineWidth', 2.5, 'MarkerSize', 2);
 
-%plot(raw_data.LiDAR_x, raw_data.LiDAR_y, 'k-', 'LineWidth', 2.5); 
-
-plot(PF_Data.x, PF_Data.y, 'k-', 'LineWidth', 2.5); 
+scatter(X, Y, 5, 'k', 'filled', 'MarkerFaceAlpha', 0.1); % Transparent grey color
 
 R = eul2rotm([anchorlocations.psi, anchorlocations.theta, anchorlocations.phi], 'ZYX');
 
 
-%4,1,5,2,7
-% color_order = ["#EDB120", "#0072BD", "#7E2F8E", "#A2142F", "#77AC30"];
-color_order = ['r', 'g', 'b', 'm', 'y'];
+anchor_order = [1,5,2,7,4];
+%color_order = ["#EDB120", "#0072BD", "#7E2F8E", "#A2142F", "#77AC30"];
+color_order = ['y', 'b', 'm', 'r', 'g'];
 
 for i = 1:length(anchorlocations.x)
     % Extract the rotation matrix for the current point
     R_current = R(:,:,i);
-    
+
     % Define a fixed vector representing the initial direction (e.g., facing east)
     v = [1; 0; 0];
-    
+
     % Transform the fixed vector to the local coordinate system
     local_v = R_current * v;
-    
+
     % Extract the local x and y components of the transformed vector
     local_x = local_v(1);
     local_y = local_v(2);
-    
-    % Choose the color for the current arrow
+
+    % Choose the color for the current triangle
     color_index = mod(i, length(color_order)) + 1; % Cycling through the color order
     color = color_order(color_index);
-    
-    % Plot the arrow with the chosen color
-    quiver(anchorlocations.x(i), anchorlocations.y(i), local_x, local_y, 'LineWidth', 1, 'MaxHeadSize', 1, 'Color', color);
-    ang = atan2(anchorlocations.y(i)-local_y,anchorlocations.x(i)-local_x);
-    fprintf(1,'%d: Angle %4.2f\n',i,ang*180/pi)
-    txt = sprintf("%d",i);
+    %quiver(anchorlocations.x(i), anchorlocations.y(i), local_x, local_y, 'LineWidth', 1, 'MaxHeadSize', 1, 'Color', color);
+    ang = atan2(local_y,local_x);
+    ang = ang+pi;
+
+    fprintf(1,'%d: Angle %4.2f\n',i,ang+pi)
+    txt = sprintf("%d",anchor_order(i));
     Veh = vehicle([anchorlocations.x(i), anchorlocations.y(i), ang]);
     patch(Veh(1:3), Veh(4:6),  color,'FaceAlpha', 0.5);
     text(anchorlocations.x(i)+0.4, anchorlocations.y(i),txt);
@@ -82,7 +88,7 @@ ylabel('Y');
 title('Raw UWB and LiDAR Trajectories');
 grid on;
 
-legend('Anchor 1', 'Anchor 2', 'Anchor 4', 'Anchor 5', 'Anchor 7', 'Anchor Locations', 'LiDar Trajectory (Ground Truth)');
+legend('Anchor 1', 'Anchor 2', 'Anchor 4', 'Anchor 5', 'Anchor 7', 'UWB Trajectory (PF Result)');
 
 
 

@@ -190,6 +190,8 @@ function [pf] = initParticleFilter
     pf.resample_y = 0.0050;
     pf.resample_yDot = 0.0050;
 
+    pf.outpute_Filename = 'PF_var_0.75.csv';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     
     fprintf(1,'Init params, association gate:%6.4f  track validation count:%6.4f  track deletion count:%6.4f\n',  pf.associationGate, pf.trackValidationCount, pf.trackDeletionCount);
@@ -409,7 +411,7 @@ function [pf] = calculateStatisticsPF(pf,T,ii)
         pf.filter(i).hypothesis.cov(3) = sqrt(cov(3)/size(pf.filter(i).sampleSet,2));
         pf.filter(i).hypothesis.cov(4) = sqrt(cov(4)/size(pf.filter(i).sampleSet,2));
 
-        printFilterStats(pf, i, tempW, 'PF_var_2_associate_10_synced.csv',T,ii);
+        printFilterStats(pf, i, tempW, pf.outpute_Filename,T,ii);
     end
 end % end function
 

@@ -36,7 +36,7 @@ function process_data(X,Y,T, anchor_ID, anchorlocations)
     % Choose the color for the current triangle
     color_index = mod(i, length(color_order)) + 1; % Cycling through the color order
     color = color_order(color_index);
-    
+    quiver(anchorlocations.x(i), anchorlocations.y(i), local_x, local_y, 'LineWidth', 1, 'MaxHeadSize', 1, 'Color', color);
     ang = atan2(local_y,local_x);
     ang = ang+pi;
 
