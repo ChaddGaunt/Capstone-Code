@@ -109,13 +109,13 @@ utc_time = datetime(posix_timestamp, 'ConvertFrom', 'posixtime', 'TimeZone', 'UT
 % Convert UTC time to Australian Sydney time
 sydney_time = datetime(utc_time, 'TimeZone', 'Australia/Sydney', 'Format', 'dd/MM/yy HH:mm:ss.SSS');
 
-average_LiDAR_velocity = mean(LiDAR_velocity)
-average_trial_velocity = mean(trial_velocity)
+average_LiDAR_velocity = mean(LiDAR_velocity);
+average_trial_velocity = mean(trial_velocity);
 
 hold on;
 
 subplot(1,2,1); % Create a subplot with 1 row and 2 columns, and select the first subplot
-plot([sydney_time(2:end),sydney_time(2:end)], [LiDAR_velocity, ones(size(sydney_time(2:end))) * average_LiDAR_velocity]);
+plot(sydney_time(2:end), [LiDAR_velocity, ones(size(sydney_time(2:end))) * average_LiDAR_velocity]);
 xlabel('Time');
 ylabel('m/s');
 subtitle('Ground Truth Velocity');
@@ -125,7 +125,7 @@ grid on;
 
 % Plot PF velocity
 subplot(1,2,2); % Select the second subplot
-plot([sydney_time, sydney_time], [trial_velocity, ones(size(sydney_time)) * average_trial_velocity]);
+plot(sydney_time, [trial_velocity, ones(size(sydney_time)) * average_trial_velocity]);
 xlabel('Time');
 ylabel('m/s');
 subtitle('PF Velocity');
@@ -139,5 +139,47 @@ xlim([min(sydney_time), max(sydney_time)]);
 
 hold off; % Release the plot
 
+%% Total Distance 
+
+n = size(results, 1);
+total_LiDAR_Distance = 0;
+Lidar_vector_totaldist = [0];
+
+
+for i = 2:n
+    LiDAR_distance = sqrt((LiDAR_x(i) - LiDAR_x(i-1))^2 + (LiDAR_y(i) - LiDAR_y(i))^2);
+    total_LiDAR_Distance = total_LiDAR_Distance + LiDAR_distance;
+    Lidar_vector_totaldist(i) = total_LiDAR_Distance;
+end
+
+n = size(results, 1);
+total_Trial_Distance = 0;
+Trial_vector_totaldist = [0];
+
+
+for i = 2:n
+    LiDAR_distance = sqrt((Trial_x(i) - Trial_x(i-1))^2 + (Trial_y(i) - Trial_y(i))^2);
+    total_Trial_Distance = total_Trial_Distance + LiDAR_distance;
+    Trial_vector_totaldist(i) = total_Trial_Distance;
+end
+
+posix_timestamp = timestamps;
+
+% Convert POSIX timestamp to datetime object in UTC time zone
+utc_time = datetime(posix_timestamp, 'ConvertFrom', 'posixtime', 'TimeZone', 'UTC');
+
+% Convert UTC time to Australian Sydney time
+sydney_time = datetime(utc_time, 'TimeZone', 'Australia/Sydney', 'Format', 'dd/MM/yy HH:mm:ss.SSS');
+
+plot(sydney_time, [Lidar_vector_totaldist', Trial_vector_totaldist']);
+
+xlim([min(sydney_time), max(sydney_time)]);
+
+xlabel('Time');
+ylabel('m');
+title(['PF Trial ', num2str(Trial_number), ': Distance Error Over Time']);
+grid on;
+title('Total Distance Travelled Comparison')
+legend(['LiDAR Trajectory: Total Distance (', num2str(total_LiDAR_Distance), ' m)'], ['UWB Trajectory: Total Distance (', num2str(total_Trial_Distance), ' m)']);
 
 
